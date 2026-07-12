@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Validate Certificate{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="validate-hero mb-4">
+      <h2 class="page-title">Certificate Validator</h2>
+      <p class="page-subtitle">Upload a certificate to verify its authenticity against the registry</p>
+    </div>
+
+    <div class="card-custom">
+      <div class="card-header-custom">
+        <span><i class="bi bi-search me-2"></i>Upload for Verification</span>
+      </div>
+      <div class="p-4">
+        <form method="POST" enctype="multipart/form-data" id="validateForm">
+          <div class="drop-zone mb-4" id="dropZone">
+            <input type="file" id="fileInput" name="certificate" accept=".pdf,.png,.jpg,.jpeg,.docx" hidden required>
+            <div class="drop-zone-content" id="dropContent">
+              <i class="bi bi-cloud-upload drop-icon"></i>
+              <p class="drop-text">Drag & drop certificate or <span class="text-gold">browse</span></p>
+              <p class="drop-hint">PDF, JPG, PNG, DOCX — max 20 MB</p>
+            </div>
+            <div class="drop-zone-preview d-none" id="dropPreview">
+              <i class="bi bi-file-earmark-check text-gold fs-2"></i>
+              <p class="mb-0 fw-semibold" id="fileName"></p>
+              <span class="small text-muted-custom" id="fileSize"></span>
+              <button type="button" class="btn btn-xs btn-outline-subtle mt-2" id="clearFile">
+                <i class="bi bi-x me-1"></i>Remove
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-gold w-100 py-3" id="submitBtn">
+            <span id="submitText"><i class="bi bi-shield-check me-2"></i>Validate Certificate</span>
+            <span id="submitSpinner" class="d-none">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Analyzing certificate…
+            </span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="card-custom mt-4">
+      <div class="card-header-custom"><i class="bi bi-info-circle me-2"></i>How validation works</div>
+      <div class="p-4">
+        <div class="row g-3">
+          <div class="col-md-4 text-center">
+            <div class="how-icon"><i class="bi bi-fingerprint"></i></div>
+            <div class="how-title">Hash Comparison</div>
+            <div class="how-desc">SHA-256 checks for exact file match. Works perfectly for digital copies.</div>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="how-icon"><i class="bi bi-eye"></i></div>
+            <div class="how-title">Visual Matching</div>
+            <div class="how-desc">Perceptual hash (pHash) matches scanned/printed copies with a similarity score.</div>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="how-icon"><i class="bi bi-cpu"></i></div>
+            <div class="how-title">AI Field Check</div>
+            <div class="how-desc">Claude extracts name, degree, year and compares against registered data.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const dropContent = document.getElementById('dropContent');
+const dropPreview = document.getElementById('dropPreview');
+const fileName = document.getElementById('fileName');
+const fileSize = document.getElementById('fileSize');
+const clearFile = document.getElementById('clearFile');
+const submitBtn = document.getElementById('submitBtn');
+const submitText = document.getElementById('submitText');
+const submitSpinner = document.getElementById('submitSpinner');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0]; if (file) setFile(file);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+clearFile.addEventListener('click', e => {
+  e.stopPropagation(); fileInput.value = '';
+  dropContent.classList.remove('d-none'); dropPreview.classList.add('d-none');
+});
+function setFile(file) {
+  const dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
+  fileName.textContent = file.name;
+  fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+  dropContent.classList.add('d-none'); dropPreview.classList.remove('d-none');
+}
+document.getElementById('validateForm').addEventListener('submit', () => {
+  submitText.classList.add('d-none'); submitSpinner.classList.remove('d-none'); submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

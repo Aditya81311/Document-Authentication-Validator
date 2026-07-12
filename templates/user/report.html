@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}Validation Report{% endblock %}
+{% block content %}
+{% set status = report.status %}
+{% set status_map = {
+  'AUTHENTIC':       ('check-circle-fill',       'status-authentic',  'AUTHENTIC'),
+  'LIKELY_AUTHENTIC':('check-circle',             'status-likely',     'LIKELY AUTHENTIC'),
+  'SUSPICIOUS':      ('exclamation-triangle-fill','status-suspicious', 'SUSPICIOUS'),
+  'REVIEW_NEEDED':   ('question-circle-fill',     'status-review',     'REVIEW NEEDED'),
+  'UNLIKELY':        ('x-circle',                 'status-unlikely',   'UNLIKELY'),
+  'NOT_FOUND':       ('x-circle-fill',            'status-notfound',   'NOT FOUND'),
+} %}
+{% set s = status_map.get(status, ('question-circle','status-review', status)) %}
+
+<div class="page-header mb-4">
+  <div>
+    <h2 class="page-title">Validation Report</h2>
+    <p class="page-subtitle">{{ report.query_filename }} — {{ report.validated_at }}</p>
+  </div>
+  <a href="{{ url_for('user_validate') }}" class="btn btn-outline-subtle">
+    <i class="bi bi-arrow-left me-2"></i>Validate Another
+  </a>
+</div>
+
+<div class="status-banner {{ s[1] }} mb-4">
+  <div class="status-banner-icon"><i class="bi bi-{{ s[0] }}"></i></div>
+  <div class="status-banner-content">
+    <div class="status-banner-label">{{ s[2] }}</div>
+    <div class="status-banner-desc">{{ report.description }}</div>
+  </div>
+  <div class="status-banner-conf">
+    <div class="conf-value">{{ '%.1f' | format(report.confidence) }}%</div>
+    <div class="conf-label">Confidence</div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-custom mb-4">
+      <div class="card-header-custom"><i class="bi bi-bar-chart me-2"></i>Match Metrics</div>
+      <div class="p-4">
+        <div class="metric-item">
+          <div class="metric-label">SHA-256 Exact Match</div>
+          <div class="metric-value">
+            {% if report.sha256_exact %}
+              <span class="badge-yes"><i class="bi bi-check-lg me-1"></i>YES</span>
+            {% else %}
+              <span class="badge-no"><i class="bi bi-x-lg me-1"></i>NO</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Visual Similarity (pHash)</div>
+          {% if report.phash_score is not none %}
+            {% set ph = report.phash_score %}
+            <div class="phash-bar-wrap">
+              <div class="phash-bar">
+                <div class="phash-fill" style="width:{{ ph }}%;background:{% if ph>=90 %}var(--green){% elif ph>=70 %}var(--gold){% else %}var(--red){% endif %}"></div>
+              </div>
+              <span class="phash-pct mono-sm">{{ '%.1f'|format(ph) }}%</span>
+            </div>
+          {% else %}<span class="text-muted-custom small">N/A</span>{% endif %}
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Field Match</div>
+          {% set fc = report.field_comparison %}
+          {% if fc.total > 0 %}
+            {% set fscore = (fc.score * 100)|round(1) %}
+            <div class="phash-bar-wrap">
+              <div class="phash-bar">
+                <div class="phash-fill" style="width:{{ fscore }}%;background:{% if fscore>=75 %}var(--green){% elif fscore>=50 %}var(--gold){% else %}var(--red){% endif %}"></div>
+              </div>
+              <span class="phash-pct mono-sm">{{ fc.match_count }}/{{ fc.total }}</span>
+            </div>
+          {% else %}<span class="text-muted-custom small">No comparable fields</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card-custom">
+      <div class="card-header-custom"><i class="bi bi-fingerprint me-2"></i>File Hashes</div>
+      <div class="p-4">
+        <div class="mb-3">
+          <div class="detail-label mb-1">SHA-256</div>
+          <div class="hash-block small">{{ report.query_sha256 }}</div>
+        </div>
+        {% if report.query_phash %}
+        <div>
+          <div class="detail-label mb-1">pHash</div>
+          <div class="hash-block small">{{ report.query_phash }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    {% if report.field_comparison.details %}
+    <div class="card-custom mb-4">
+      <div class="card-header-custom"><i class="bi bi-layout-split me-2"></i>Field Comparison</div>
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Uploaded Document (OCR)</th>
+              <th>Registered Value</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for detail in report.field_comparison.details %}
+            <tr>
+              <td class="detail-label">{{ detail.field }}</td>
+              <td>{{ detail.query or '<span class="text-muted-custom small">—</span>' }}</td>
+              <td>{{ detail.stored or '<span class="text-muted-custom small">—</span>' }}</td>
+              <td>
+                {% if detail.match is none %}
+                  <span class="text-muted-custom small">{{ detail.note or 'Skipped' }}</span>
+                {% elif detail.match %}
+                  <span class="badge-yes"><i class="bi bi-check-lg"></i></span>
+                {% else %}
+                  <span class="badge-no"><i class="bi bi-x-lg"></i></span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if report.matched_cert %}
+    {% set mc = report.matched_cert %}
+    <div class="card-custom">
+      <div class="card-header-custom">
+        <span><i class="bi bi-file-earmark-check me-2"></i>Matched Registry Entry</span>
+        <span class="mono-sm text-gold">#{{ mc.id }} — {{ mc.template_name }}</span>
+      </div>
+      <div class="p-4">
+        <div class="detail-grid">
+          {% for key, val in mc.fields_dict.items() %}
+          <div class="detail-item">
+            <span class="detail-label">{{ key }}</span>
+            <span class="detail-value">{{ val or '—' }}</span>
+          </div>
+          {% endfor %}
+          <div class="detail-item">
+            <span class="detail-label">Registered On</span>
+            <span class="detail-value">{{ mc.uploaded_at[:10] }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card-custom">
+      <div class="p-4">
+        <div class="empty-state">
+          <i class="bi bi-database-x"></i>
+          <p>No matching certificate found in the registry.</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Validation Logs{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+  <div>
+    <h2 class="page-title">Validation Logs</h2>
+    <p class="page-subtitle">All certificate validation attempts</p>
+  </div>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-subtle">
+    <i class="bi bi-arrow-left me-2"></i>Back
+  </a>
+</div>
+
+<div class="card-custom">
+  <div class="card-header-custom">
+    <span><i class="bi bi-journal-text me-2"></i>Recent Validations (last 100)</span>
+  </div>
+  {% if logs %}
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>File</th>
+          <th>Status</th>
+          <th>Confidence</th>
+          <th>pHash Score</th>
+          <th>Matched Cert</th>
+          <th>Validated By</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="mono-sm text-gold">{{ log.id }}</td>
+          <td class="small">{{ log.query_filename or '—' }}</td>
+          <td>
+            <span class="status-badge status-{{ log.status | lower }}">
+              {% if log.status == 'AUTHENTIC' %}<i class="bi bi-check-circle-fill me-1"></i>
+              {% elif log.status in ['SUSPICIOUS', 'NOT_FOUND'] %}<i class="bi bi-x-circle-fill me-1"></i>
+              {% else %}<i class="bi bi-exclamation-circle-fill me-1"></i>{% endif %}
+              {{ log.status }}
+            </span>
+          </td>
+          <td>
+            {% if log.confidence is not none %}
+              <span class="mono-sm">{{ '%.1f' | format(log.confidence) }}%</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if log.phash_score is not none %}
+              <span class="mono-sm">{{ '%.1f' | format(log.phash_score) }}%</span>
+            {% else %}<span class="text-muted-custom">—</span>{% endif %}
+          </td>
+          <td>
+            {% if log.matched_cert_id %}
+              <a href="{{ url_for('admin_certificate_detail', cert_id=log.matched_cert_id) }}" class="text-gold small">
+                #{{ log.matched_cert_id }} {{ log.owner_name or '' }}
+              </a>
+            {% else %}<span class="text-muted-custom small">None</span>{% endif %}
+          </td>
+          <td class="small">{{ log.validated_by_name or '—' }}</td>
+          <td class="small text-muted-custom">{{ log.validated_at[:16] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-journal-x"></i>
+    <p>No validation logs yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Certificate Templates{% endblock %}
+{% block content %}
+<div class="page-header mb-4">
+  <div>
+    <h2 class="page-title">Certificate Templates</h2>
+    <p class="page-subtitle">Define field structures for different certificate types</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-subtle"><i class="bi bi-arrow-left me-2"></i>Back</a>
+    <a href="{{ url_for('admin_template_new') }}" class="btn btn-gold"><i class="bi bi-plus-lg me-2"></i>New Template</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for tmpl in templates %}
+  {% set fields = tmpl.field_names | from_json %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card-custom h-100">
+      <div class="card-header-custom">
+        <span><i class="bi bi-layout-text-window me-2"></i>{{ tmpl.name }}</span>
+        <span class="mono-sm text-muted-custom">#{{ tmpl.id }}</span>
+      </div>
+      <div class="p-3">
+        <div class="mb-3">
+          {% for field in fields %}
+          <span class="field-pill">{{ field }}</span>
+          {% endfor %}
+        </div>
+        <div class="d-flex align-items-center justify-content-between">
+          <span class="small text-muted-custom">
+            <i class="bi bi-files me-1"></i>{{ tmpl.cert_count }} certificate{{ 's' if tmpl.cert_count != 1 }}
+          </span>
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_template_edit', tmpl_id=tmpl.id) }}" class="btn btn-xs btn-outline-subtle"><i class="bi bi-pencil me-1"></i>Edit</a>
+            <form method="POST" action="{{ url_for('admin_template_delete', tmpl_id=tmpl.id) }}" onsubmit="return confirm('Delete this template?')">
+              <button type="submit" class="btn btn-xs btn-outline-danger-subtle"><i class="bi bi-trash"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card-custom">
+      <div class="empty-state">
+        <i class="bi bi-grid-1x2"></i>
+        <p>No templates yet.</p>
+        <a href="{{ url_for('admin_template_new') }}" class="btn btn-gold btn-sm mt-2">Create First Template</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

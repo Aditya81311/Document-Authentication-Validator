@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-header mb-4">
+  <div>
+    <h2 class="page-title">Certificate Registry</h2>
+    <p class="page-subtitle">Manage all uploaded certificates</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin_templates') }}" class="btn btn-outline-subtle">
+      <i class="bi bi-grid-1x2 me-2"></i>Templates
+    </a>
+    <a href="{{ url_for('admin_upload') }}" class="btn btn-gold">
+      <i class="bi bi-plus-lg me-2"></i>Upload Certificate
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><i class="bi bi-files"></i></div>
+      <div><div class="stat-value">{{ total }}</div><div class="stat-label">Total Certificates</div></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon icon-gold"><i class="bi bi-search"></i></div>
+      <div><div class="stat-value">{{ total_validations }}</div><div class="stat-label">Validations</div></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="stat-icon icon-green"><i class="bi bi-grid-1x2"></i></div>
+      <div><div class="stat-value">{{ total_templates }}</div><div class="stat-label">Templates</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card-custom">
+  <div class="card-header-custom">
+    <span><i class="bi bi-table me-2"></i>All Certificates</span>
+    <a href="{{ url_for('admin_logs') }}" class="btn btn-sm btn-outline-subtle">
+      <i class="bi bi-journal-text me-1"></i>View Logs
+    </a>
+  </div>
+  {% if certs %}
+  <div class="table-responsive">
+    <table class="table table-custom">
+      <thead>
+        <tr>
+          <th>#ID</th>
+          <th>Template</th>
+          <th>Key Fields</th>
+          <th>File</th>
+          <th>SHA-256</th>
+          <th>pHash</th>
+          <th>Uploaded</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cert in certs %}
+        <tr>
+          <td><span class="mono-sm text-gold">#{{ cert.id }}</span></td>
+          <td><span class="small">{{ cert.template_name }}</span></td>
+          <td>
+            {% set fd = cert.fields_dict %}
+            <div class="small">
+              {% for k, v in fd.items() %}{% if v %}<span class="text-muted-custom">{{ k }}:</span> {{ v }}&nbsp;&nbsp;{% endif %}{% endfor %}
+            </div>
+          </td>
+          <td>
+            <span class="file-badge file-{{ cert.file_type }}">{{ cert.file_type.upper() }}</span>
+          </td>
+          <td><span class="hash-chip" title="{{ cert.sha256_hash }}">{{ cert.sha256_hash[:12] }}…</span></td>
+          <td>
+            {% if cert.phash %}<span class="hash-chip">{{ cert.phash[:10] }}…</span>
+            {% else %}<span class="text-muted-custom small">N/A</span>{% endif %}
+          </td>
+          <td><span class="small text-muted-custom">{{ cert.uploaded_at[:10] }}</span></td>
+          <td>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('admin_certificate_detail', cert_id=cert.id) }}" class="btn btn-xs btn-outline-subtle"><i class="bi bi-eye"></i></a>
+              <form method="POST" action="{{ url_for('admin_delete_certificate', cert_id=cert.id) }}" onsubmit="return confirm('Delete #{{ cert.id }}?')">
+                <button type="submit" class="btn btn-xs btn-outline-danger-subtle"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-inbox"></i>
+    <p>No certificates yet.</p>
+    <a href="{{ url_for('admin_upload') }}" class="btn btn-gold btn-sm mt-2">Upload First Certificate</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

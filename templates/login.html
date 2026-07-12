@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — DocAuth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; background: #f0f4f8; }
+
+    /* LEFT PANEL */
+    .left-panel {
+      width: 55%;
+      /* background: linear-gradient(145deg, #90b9ff 0%, #ff4a63 60%, #a8c3fd 100%); */
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 3rem 3.5rem; position: relative; overflow: hidden;
+    }
+    .left-panel::before {
+      content: ''; position: absolute; width: 500px; height: 500px; border-radius: 50%;
+      border: 80px solid rgba(255,255,255,0.04); top: -180px; right: -180px; pointer-events: none;
+    }
+    .left-panel::after {
+      content: ''; position: absolute; width: 320px; height: 320px; border-radius: 50%;
+      border: 50px solid rgba(255,255,255,0.05); bottom: -100px; left: -80px; pointer-events: none;
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; z-index: 1; }
+    .brand-icon {
+      width: 42px; height: 42px; background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; color: #000000; backdrop-filter: blur(4px);
+    }
+    .brand-name { font-size: 1.2rem; font-weight: 700; color: #ff0a0a; letter-spacing: -0.01em; }
+    .brand-tag  { font-size: 0.68rem; color: rgba(0, 0, 0, 0.5); letter-spacing: 0.07em; text-transform: uppercase; margin-top: 1px; }
+
+    .left-headline { z-index: 1; }
+    .left-headline h2 { font-size: 1.9rem; font-weight: 700; color: #000000; line-height: 1.25; letter-spacing: -0.02em; margin-bottom: 0.9rem; }
+    .left-headline p  { font-size: 0.875rem; color: rgba(33, 29, 29, 0.6); line-height: 1.7; max-width: 380px; }
+
+    .features { display: flex; flex-direction: column; gap: 0.85rem; z-index: 1; }
+    .feature-item { display: flex; align-items: flex-start; gap: 0.875rem; }
+    .feature-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; color: #150909;
+    }
+    .feature-text strong { display: block; font-size: 0.82rem; color: #080101; font-weight: 600; margin-bottom: 0.15rem; }
+    .feature-text span   { font-size: 0.75rem; color: rgba(57, 49, 49, 0.52); line-height: 1.45; }
+
+    .stats-strip {
+      display: flex; gap: 2rem; z-index: 1;
+      padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .stat-block strong { display: block; font-size: 1.3rem; font-weight: 700; color: #ff4f4f; }
+    .stat-block span   { font-size: 0.7rem; color: rgba(73, 70, 70, 0.5); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* RIGHT PANEL */
+    .right-panel {
+      width: 45%; display: flex; align-items: center; justify-content: center;
+      padding: 2.5rem 3rem; background: #ffffff;
+    }
+    .login-box { width: 100%; max-width: 360px; }
+
+    .login-header { margin-bottom: 2rem; }
+    .login-header h1 { font-size: 1.5rem; font-weight: 700; color: #1a202c; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+    .login-header p  { font-size: 0.85rem; color: #64748b; }
+
+    .role-toggle { display: flex; background: #f0f4f8; border-radius: 8px; padding: 4px; margin-bottom: 1.75rem; }
+    .role-btn {
+      flex: 1; padding: 0.45rem; border: none; background: transparent; border-radius: 6px;
+      font-size: 0.82rem; font-weight: 500; color: #64748b; cursor: pointer;
+      transition: all 0.15s; font-family: 'Inter', sans-serif;
+    }
+    .role-btn.active { background: #fff; color: #1a56db; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .role-btn i { margin-right: 0.35rem; }
+
+    .form-label-custom {
+      font-size: 0.76rem; font-weight: 600; color: #374151;
+      letter-spacing: 0.04em; text-transform: uppercase; display: block; margin-bottom: 0.4rem;
+    }
+    .input-wrap { position: relative; margin-bottom: 1.1rem; }
+    .input-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem; pointer-events: none; }
+    .form-input {
+      width: 100%; padding: 0.65rem 0.9rem 0.65rem 2.4rem;
+      border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: 0.9rem; font-family: 'Inter', sans-serif; color: #1a202c;
+      background: #fff; transition: border-color 0.15s, box-shadow 0.15s; outline: none;
+    }
+    .form-input::placeholder { color: #cbd5e1; }
+    .form-input:focus { border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+
+    .btn-login {
+      width: 100%; padding: 0.75rem; background: #1a56db; color: #fff; border: none;
+      border-radius: 8px; font-size: 0.9rem; font-weight: 600; font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(26,86,219,0.3); margin-top: 0.4rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .btn-login:hover { background: #1341b0; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,86,219,0.35); }
+    .btn-login:active { transform: translateY(0); }
+
+    .alert-custom {
+      background: #fef2f2; border: 1px solid rgba(224,36,36,0.2); color: #c81e1e;
+      border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 0.82rem; margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .alert-success-custom { background: #ecfdf5; border-color: rgba(13,159,110,0.2); color: #0d9f6e; }
+
+    .divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.5rem 0 1rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+    .divider span { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+
+    .cred-hints { display: flex; gap: 0.6rem; }
+    .cred-card {
+      flex: 1; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0.6rem 0.75rem;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s; background: #f8fafc;
+    }
+    .cred-card:hover { border-color: #1a56db; background: #eff6ff; }
+    .cred-card.user:hover { border-color: #0d9f6e; background: #ecfdf5; }
+    .cred-card .cred-role { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.2rem; }
+    .cred-card.admin .cred-role { color: #1a56db; }
+    .cred-card.user  .cred-role { color: #0d9f6e; }
+    .cred-card .cred-val { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #64748b; }
+
+    .login-footer { text-align: center; margin-top: 1.75rem; font-size: 0.72rem; color: #94a3b8; }
+
+    @media (max-width: 768px) {
+      .left-panel { display: none; }
+      .right-panel { width: 100%; padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-panel">
+  <div class="brand">
+    <div class="brand-icon"><i class="bi bi-shield-check-fill"></i></div>
+    <div>
+      <div class="brand-name">DocAuth</div>
+      <div class="brand-tag">Certificate Authentication</div>
+    </div>
+  </div>
+
+  <div class="left-headline">
+    <h2>Verify certificates<br>with confidence.</h2>
+    <p>A secure, fully offline platform for institutions to register authentic certificates and for organizations to validate them — instantly.</p>
+  </div>
+
+  <div class="features">
+    <div class="feature-item">
+      <div class="feature-icon"><i class="bi bi-fingerprint"></i></div>
+      <div class="feature-text">
+        <strong>SHA-256 + Perceptual Hashing</strong>
+        <span>Exact file matching and visual similarity detection — even for scanned or photographed copies.</span>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon"><i class="bi bi-cpu"></i></div>
+      <div class="feature-text">
+        <strong>Offline OCR Field Extraction</strong>
+        <span>Tesseract-powered field comparison with zero internet or API dependency.</span>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon"><i class="bi bi-layout-text-window"></i></div>
+      <div class="feature-text">
+        <strong>Universal Template System</strong>
+        <span>Define custom fields for any certificate type — degrees, workshops, licenses, and more.</span>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon"><i class="bi bi-bar-chart-line-fill"></i></div>
+      <div class="feature-text">
+        <strong>Confidence Score Reports</strong>
+        <span>Every validation produces a detailed report with hash metrics and field-by-field comparison.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-block"><strong>3</strong><span>Matching Layers</span></div>
+    <div class="stat-block"><strong>4</strong><span>File Formats</span></div>
+    <div class="stat-block"><strong>100%</strong><span>Offline</span></div>
+  </div>
+</div>
+
+<div class="right-panel">
+  <div class="login-box">
+    <div class="login-header">
+      <h1>Welcome back</h1>
+      <p>Sign in to access the certificate registry</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert-custom {{ 'alert-success-custom' if category == 'success' else '' }}">
+            <i class="bi bi-{{ 'check-circle-fill' if category == 'success' else 'exclamation-circle-fill' }}"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="role-toggle">
+      <button type="button" class="role-btn active" id="btnAdmin" onclick="selectRole('admin')">
+        <i class="bi bi-shield-lock-fill"></i>Admin
+      </button>
+      <button type="button" class="role-btn" id="btnUser" onclick="selectRole('user')">
+        <i class="bi bi-person-fill"></i>Verifier
+      </button>
+    </div>
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div>
+        <label class="form-label-custom">Username</label>
+        <div class="input-wrap">
+          <i class="bi bi-person input-icon"></i>
+          <input type="text" name="username" id="usernameField" class="form-input" placeholder="Enter username" required autofocus>
+        </div>
+      </div>
+      <div>
+        <label class="form-label-custom">Password</label>
+        <div class="input-wrap">
+          <i class="bi bi-lock input-icon"></i>
+          <input type="password" name="password" class="form-input" placeholder="Enter password" required>
+        </div>
+      </div>
+      <button type="submit" class="btn-login">
+        <i class="bi bi-box-arrow-in-right"></i>Sign In
+      </button>
+    </form>
+
+    <div class="divider"><span>Quick access</span></div>
+    <div class="cred-hints">
+      <div class="cred-card admin" onclick="fillCreds('admin','admin123')">
+        <div class="cred-role"><i class="bi bi-shield-lock-fill"></i> Admin</div>
+        <div class="cred-val">admin / admin123</div>
+      </div>
+      <div class="cred-card user" onclick="fillCreds('user','user123')">
+        <div class="cred-role"><i class="bi bi-person-fill"></i> Verifier</div>
+        <div class="cred-val">user / user123</div>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      <i class="bi bi-lock-fill"></i> All data stays on your local server. No cloud, no tracking.
+    </div>
+  </div>
+</div>
+
+<script>
+function selectRole(role) {
+  document.getElementById('btnAdmin').classList.toggle('active', role === 'admin');
+  document.getElementById('btnUser').classList.toggle('active', role === 'user');
+}
+function fillCreds(user, pass) {
+  document.querySelector('input[name="username"]').value = user;
+  document.querySelector('input[name="password"]').value = pass;
+  selectRole(user === 'admin' ? 'admin' : 'user');
+}
+</script>
+</body>
+</html>

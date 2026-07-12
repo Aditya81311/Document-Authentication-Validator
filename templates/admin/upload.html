@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block title %}Upload Certificate{% endblock %}
+{% block content %}
+<div class="page-header mb-4">
+  <div>
+    <h2 class="page-title">Upload Certificate</h2>
+    <p class="page-subtitle">Add a new certificate to the registry</p>
+  </div>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-subtle"><i class="bi bi-arrow-left me-2"></i>Back</a>
+</div>
+
+{% if not templates %}
+<div class="card-custom p-4 text-center">
+  <i class="bi bi-grid-1x2 fs-2 text-gold d-block mb-3"></i>
+  <p>No templates found. Create a template first to define certificate fields.</p>
+  <a href="{{ url_for('admin_template_new') }}" class="btn btn-gold">Create Template</a>
+</div>
+{% else %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-custom">
+      <div class="card-header-custom"><i class="bi bi-upload me-2"></i>Certificate Details</div>
+      <div class="p-4">
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+
+          <!-- Template selector -->
+          <div class="mb-4">
+            <label class="form-label label-custom">Certificate Type <span class="text-gold">*</span></label>
+            <select name="template_id" id="templateSelect" class="form-control form-control-custom" required>
+              <option value="">— Select a template —</option>
+              {% for tmpl in templates %}
+              <option value="{{ tmpl.id }}">{{ tmpl.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="mt-2" id="templateFieldPills"></div>
+          </div>
+
+          <!-- Dynamic fields -->
+          <div id="dynamicFields" class="d-none">
+            <div class="divider-label mb-3">Certificate Fields</div>
+            <div id="fieldsContainer" class="row g-3"></div>
+          </div>
+
+          <!-- File upload -->
+          <div class="mt-4 mb-4">
+            <label class="form-label label-custom">Certificate File <span class="text-gold">*</span></label>
+            <div class="drop-zone" id="dropZone">
+              <input type="file" id="fileInput" name="certificate" accept=".pdf,.png,.jpg,.jpeg,.docx" hidden required>
+              <div id="dropContent">
+                <i class="bi bi-cloud-upload drop-icon"></i>
+                <p class="drop-text">Drag & drop or <span class="text-gold">browse</span></p>
+                <p class="drop-hint">PDF, JPG, PNG, DOCX — max 20 MB</p>
+              </div>
+              <div class="drop-zone-preview d-none" id="dropPreview">
+                <i class="bi bi-file-earmark-check text-gold fs-2"></i>
+                <p class="mb-0 fw-semibold" id="fileName"></p>
+                <span class="small text-muted-custom" id="fileSize"></span>
+                <button type="button" class="btn btn-xs btn-outline-subtle mt-2" id="clearFile">
+                  <i class="bi bi-x me-1"></i>Remove
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-gold px-4" id="submitBtn">
+              <span id="submitText"><i class="bi bi-shield-plus me-2"></i>Upload & Register</span>
+              <span id="submitSpinner" class="d-none">
+                <span class="spinner-border spinner-border-sm me-2"></span>Processing…
+              </span>
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-subtle px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-custom">
+      <div class="card-header-custom"><i class="bi bi-info-circle me-2"></i>How it works</div>
+      <div class="p-4">
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="step-num">1</div>
+            <div>
+              <div class="step-title">Pick template</div>
+              <div class="step-desc">Fields come from the selected template — fully customizable</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-num">2</div>
+            <div>
+              <div class="step-title">Fill fields</div>
+              <div class="step-desc">Admin-entered values are the ground truth stored in the registry</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-num">3</div>
+            <div>
+              <div class="step-title">SHA-256 + pHash extracted</div>
+              <div class="step-desc">Fingerprints are automatically computed from the uploaded file</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const select     = document.getElementById('templateSelect');
+const pills      = document.getElementById('templateFieldPills');
+const dynFields  = document.getElementById('dynamicFields');
+const container  = document.getElementById('fieldsContainer');
+const dropZone   = document.getElementById('dropZone');
+const fileInput  = document.getElementById('fileInput');
+const dropContent = document.getElementById('dropContent');
+const dropPreview = document.getElementById('dropPreview');
+const fileName   = document.getElementById('fileName');
+const fileSize   = document.getElementById('fileSize');
+
+select.addEventListener('change', async () => {
+  const id = select.value;
+  pills.innerHTML = '';
+  container.innerHTML = '';
+  dynFields.classList.add('d-none');
+
+  if (!id) return;
+
+  const res  = await fetch(`/api/template-fields/${id}`);
+  const fields = await res.json();
+
+  pills.innerHTML = fields.map(f => `<span class="field-pill">${f}</span>`).join('');
+
+  container.innerHTML = fields.map((f, i) => `
+    <div class="col-md-6">
+      <label class="form-label label-custom">${f}</label>
+      <input type="text" name="field_${f}" class="form-control form-control-custom"
+        placeholder="Enter ${f.toLowerCase()}">
+    </div>
+  `).join('');
+
+  dynFields.classList.remove('d-none');
+});
+
+// Drop zone
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0]; if (f) setFile(f);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+document.getElementById('clearFile').addEventListener('click', e => {
+  e.stopPropagation(); fileInput.value = '';
+  dropContent.classList.remove('d-none'); dropPreview.classList.add('d-none');
+});
+function setFile(f) {
+  const dt = new DataTransfer(); dt.items.add(f); fileInput.files = dt.files;
+  fileName.textContent = f.name;
+  fileSize.textContent = (f.size/1024/1024).toFixed(2) + ' MB';
+  dropContent.classList.add('d-none'); dropPreview.classList.remove('d-none');
+}
+document.getElementById('uploadForm').addEventListener('submit', () => {
+  document.getElementById('submitText').classList.add('d-none');
+  document.getElementById('submitSpinner').classList.remove('d-none');
+  document.getElementById('submitBtn').disabled = true;
+});
+</script>
+{% endblock %}

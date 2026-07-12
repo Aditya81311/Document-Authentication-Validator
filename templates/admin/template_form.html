@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if template else 'New' }} Template{% endblock %}
+{% block content %}
+<div class="page-header mb-4">
+  <div>
+    <h2 class="page-title">{{ 'Edit Template' if template else 'New Template' }}</h2>
+    <p class="page-subtitle">Define the fields this certificate type will carry</p>
+  </div>
+  <a href="{{ url_for('admin_templates') }}" class="btn btn-outline-subtle"><i class="bi bi-arrow-left me-2"></i>Back</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-custom">
+      <div class="card-header-custom"><i class="bi bi-pencil-square me-2"></i>Template Details</div>
+      <div class="p-4">
+        <form method="POST">
+          <div class="mb-4">
+            <label class="form-label label-custom">Template Name <span class="text-gold">*</span></label>
+            <input type="text" name="name" class="form-control form-control-custom"
+              placeholder="e.g. Degree Certificate, ISO Certification, Workshop Completion..."
+              value="{{ template.name if template else '' }}" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label label-custom">Fields <span class="text-gold">*</span></label>
+            <textarea name="fields" class="form-control form-control-custom" rows="8" id="fieldsArea"
+              placeholder="One field name per line&#10;e.g.&#10;Student Name&#10;Degree&#10;Year of Issue&#10;Roll Number&#10;Institution" required>{{ template.field_names_list | join('\n') if template else '' }}</textarea>
+            <div class="form-hint">One field per line. These become the labels on the certificate upload form and validation report.</div>
+          </div>
+
+          <!-- Live preview -->
+          <div class="mb-4">
+            <div class="label-custom mb-2">Preview</div>
+            <div id="fieldPreview" class="field-preview"></div>
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-gold px-4">
+              <i class="bi bi-check-lg me-2"></i>{{ 'Update Template' if template else 'Create Template' }}
+            </button>
+            <a href="{{ url_for('admin_templates') }}" class="btn btn-outline-subtle px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-custom">
+      <div class="card-header-custom"><i class="bi bi-info-circle me-2"></i>Tips</div>
+      <div class="p-4">
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="step-num">1</div>
+            <div>
+              <div class="step-title">Name fields naturally</div>
+              <div class="step-desc">Use the actual label as it appears on the certificate — "Student Name", "Year of Issue", "License Number"</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-num">2</div>
+            <div>
+              <div class="step-title">OCR picks up keywords</div>
+              <div class="step-desc">Fields containing words like "name", "year", "number", "institution" get auto-extracted from scanned documents</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-num">3</div>
+            <div>
+              <div class="step-title">Admin values win</div>
+              <div class="step-desc">Whatever admin enters on upload is the ground truth — OCR only assists during user validation</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const area = document.getElementById('fieldsArea');
+const preview = document.getElementById('fieldPreview');
+
+function updatePreview() {
+  const lines = area.value.split('\n').map(l => l.trim()).filter(Boolean);
+  preview.innerHTML = lines.length
+    ? lines.map(f => `<span class="field-pill">${f}</span>`).join('')
+    : '<span class="text-muted-custom small">Fields will appear here…</span>';
+}
+
+area.addEventListener('input', updatePreview);
+updatePreview();
+</script>
+{% endblock %}

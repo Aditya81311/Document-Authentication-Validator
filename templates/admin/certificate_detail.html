@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Certificate #{{ cert.id }}{% endblock %}
+{% block content %}
+<div class="page-header mb-4">
+  <div>
+    <h2 class="page-title">Certificate <span class="text-gold">#{{ cert.id }}</span></h2>
+    <p class="page-subtitle">{{ cert.template_name }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-subtle"><i class="bi bi-arrow-left me-2"></i>Back</a>
+    <form method="POST" action="{{ url_for('admin_delete_certificate', cert_id=cert.id) }}" onsubmit="return confirm('Delete permanently?')">
+      <button type="submit" class="btn btn-danger-subtle"><i class="bi bi-trash me-2"></i>Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card-custom">
+      <div class="card-header-custom"><i class="bi bi-card-list me-2"></i>Certificate Fields</div>
+      <div class="p-4">
+        <div class="detail-grid">
+          {% for key, val in cert.fields_dict.items() %}
+          <div class="detail-item">
+            <span class="detail-label">{{ key }}</span>
+            <span class="detail-value">{{ val or '—' }}</span>
+          </div>
+          {% endfor %}
+          <div class="detail-item">
+            <span class="detail-label">File Type</span>
+            <span class="detail-value"><span class="file-badge file-{{ cert.file_type }}">{{ cert.file_type.upper() }}</span></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Original File</span>
+            <span class="detail-value mono-sm">{{ cert.original_filename }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Uploaded</span>
+            <span class="detail-value">{{ cert.uploaded_at }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Uploaded By</span>
+            <span class="detail-value">{{ cert.uploaded_by_name or '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-custom">
+      <div class="card-header-custom"><i class="bi bi-fingerprint me-2"></i>Uniqueness Markers</div>
+      <div class="p-4">
+        <div class="mb-3">
+          <div class="detail-label mb-1">SHA-256</div>
+          <div class="hash-block">{{ cert.sha256_hash }}</div>
+        </div>
+        <div>
+          <div class="detail-label mb-1">Perceptual Hash (pHash)</div>
+          {% if cert.phash %}
+            <div class="hash-block">{{ cert.phash }}</div>
+          {% else %}
+            <div class="text-muted-custom small">Not available for this file type</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
